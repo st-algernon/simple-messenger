@@ -1,0 +1,29 @@
+@import '../../styles.scss';
+
+.messenger-page {
+    height: 100%;
+    position: relative;
+    background: linear-gradient(57deg, #0e74f1,#aac8f8,#aaf8c1,#e3f995);
+}
+
+.header {
+    @include flexible(row, space-between, center);
+
+    .menu {
+        &__list {
+            list-style-type: none;
+        }
+    }
+}
+
+.aside {
+    width: 25%;
+    position: fixed;
+    top: 79px;
+    bottom: 15px;
+    left: 15px;
+
+    &__header {
+        @include flexible(row, space-between, center);
+    }
+}
