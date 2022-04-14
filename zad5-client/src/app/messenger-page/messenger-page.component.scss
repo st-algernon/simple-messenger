@@ -9,21 +9,63 @@
 .header {
     @include flexible(row, space-between, center);
 
-    .menu {
-        &__list {
-            list-style-type: none;
-        }
+    &__menu {
+        font-size: 16px;
+    }
+
+    &__menu-list {
+        @include flexible(row, space-between, center);
+        list-style-type: none;
+    }
+
+    &__menu-item {
+        margin-left: 10px;
     }
 }
 
 .aside {
+    @include flexible(column, space-between, stretch);
     width: 25%;
     position: fixed;
     top: 79px;
     bottom: 15px;
-    left: 15px;
+    left: 1%;
+    box-sizing: border-box;
 
-    &__header {
-        @include flexible(row, space-between, center);
+    .message-menu {
+        margin-bottom: 15px;
+
+        &__compose {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        &__item {
+            &--active {
+                background-color: #f6f6f6;
+            }
+        }
+
+        &__icon {
+            color: rgba(0, 0, 0, 0.54);
+            margin-right: 5px;
+        }
+    }
+
+    .contacts {       
+        flex-grow: 1;
+        overflow-y: auto;
+
+        &__header {
+            @include flexible(row, space-between, center);
+        }
+
+        &__avatar {
+            font-size: 35px;
+            color: #aac8f8;
+        }
     }
 }
+table {
+    width: 100%;
+  }

@@ -16,5 +16,13 @@
         &__form-field {
             width: 100%;
         }
+
+        &__btn {
+            @include flexible(row, center, center);
+        }
+
+        &__spinner {
+            margin: 8px 0px;
+        }
     }
 }

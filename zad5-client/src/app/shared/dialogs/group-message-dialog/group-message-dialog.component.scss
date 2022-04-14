@@ -1,0 +1,13 @@
+.new-message {
+    &__field {
+        width: 100%;
+    }
+}
+
+.recipients {
+    &__autocomplete {
+        &--username {
+            color: rgba(0, 0, 0, .65);
+        }
+    }
+}

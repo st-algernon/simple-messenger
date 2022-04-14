@@ -16,6 +16,9 @@ using Microsoft.EntityFrameworkCore;
 using zad5.Configs;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using zad5.Hubs;
+using zad5.Extensions.Middleware;
+using Microsoft.AspNetCore.SignalR;
 
 namespace zad5
 {
@@ -32,30 +35,82 @@ namespace zad5
         public void ConfigureServices(IServiceCollection services)
         {
             string connection = Configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<ChatContext>(options => options.UseSqlServer(connection));
-
-            services.AddControllers();
-            services.AddSwaggerGen(c =>
+            services.AddDbContext<MessengerContext>(options => options.UseSqlServer(connection));
+            services.AddSignalR(hubOptions =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "zad5", Version = "v1" });
+                hubOptions.EnableDetailedErrors = true;
             });
+            services.AddSingleton<IUserIdProvider, UserIdProvider>();
+            services.AddControllers();
+
+            services.AddSwaggerGen(swagger =>
+            {
+                swagger.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "JWT Token Authentication API",
+                    Description = "ASP.NET Core 5.0 Web API"
+                });
+                swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\"",
+                });
+                swagger.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                          new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                }
+                            },
+                            new string[] {}
+                    }
+                });
+            });
+
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = JwtConfig.ISSUER,
+
+                ValidateAudience = true,
+                ValidAudience = JwtConfig.AUDIENCE,
+
+                ValidateLifetime = true,
+
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = JwtConfig.GetSymmetricSecurityKey(),
+            };
+
+            services.AddSingleton(tokenValidationParameters);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options => {
                     options.RequireHttpsMetadata = false;
-                    options.TokenValidationParameters = new TokenValidationParameters
+                    options.TokenValidationParameters = tokenValidationParameters;
+                    options.Events = new JwtBearerEvents
                     {
-                        ValidateIssuer = true,
-                        ValidIssuer = JwtConfig.ISSUER,
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
 
-                        ValidateAudience = true,
-                        ValidAudience = JwtConfig.AUDIENCE,
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                            {
+                                context.Token = accessToken;
+                            }
 
-                        ValidateLifetime = true,
-
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = JwtConfig.GetSymmetricSecurityKey(),
-                    }; ;
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
         }
 
@@ -68,6 +123,11 @@ namespace zad5
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "zad5 v1"));
             }
+            app.UseCors(x => x
+                .WithOrigins("http://localhost:4200")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
 
             app.UseHttpsRedirection();
 
@@ -75,10 +135,11 @@ namespace zad5
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<MessagesHub>("/hubs/messages");
             });
         }
     }

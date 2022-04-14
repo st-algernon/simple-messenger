@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { LoginRequest } from '../shared/interfaces';
+import { LoginRequest, RegisterRequest } from '../shared/interfaces';
 import { AuthService } from '../shared/services/auth.service';
 
 @Component({
@@ -12,6 +12,7 @@ import { AuthService } from '../shared/services/auth.service';
 })
 export class AuthPageComponent implements OnInit {
 
+  submitted: boolean = false;
   loginForm: FormGroup;
   registerForm: FormGroup;
 
@@ -42,6 +43,8 @@ export class AuthPageComponent implements OnInit {
       return
     }
 
+    this.submitted = true;
+
     const loginRequest: LoginRequest = {
       email: this.loginForm.value.email,
       password: this.loginForm.value.password
@@ -49,13 +52,35 @@ export class AuthPageComponent implements OnInit {
 
     this.subs.push(
       this.authService.login(loginRequest).subscribe(() => {
-        this.loginForm.reset();
-        this.router.navigate(['/chat']);
+        this.router.navigate(['']);
+        this.submitted = false;
+      }, () => {
+        this.submitted = false;
       })
     );
   }
 
   register() {
+    if (this.registerForm.invalid) {
+      return
+    }
 
+    this.submitted = true;
+
+    const registerRequest: RegisterRequest = {
+      name: this.registerForm.value.name,
+      username: this.registerForm.value.username,
+      email: this.registerForm.value.email,
+      password: this.registerForm.value.password
+    }
+
+    this.subs.push(
+      this.authService.register(registerRequest).subscribe(() => {
+        this.router.navigate(['']);
+        this.submitted = false;
+      }, () => {
+        this.submitted = false;
+      })
+    );
   }
 }

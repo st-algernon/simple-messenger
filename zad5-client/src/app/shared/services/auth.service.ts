@@ -28,7 +28,7 @@ export class AuthService {
 
   login(loginRequest: LoginRequest) {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, loginRequest)
+      .post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, loginRequest)
       .pipe(
         tap(this.setTokens),
         catchError((error) => {
@@ -40,7 +40,7 @@ export class AuthService {
 
   register(registerRequest: RegisterRequest) {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/register`, registerRequest)
+      .post<AuthResponse>(`${environment.apiUrl}/api/auth/register`, registerRequest)
       .pipe(
         tap(this.setTokens),
         catchError((error) => {
@@ -56,7 +56,7 @@ export class AuthService {
       refreshToken: this.refreshToken as string
     }
 
-    return this.http.put<AuthResponse>(`${environment.apiUrl}/auth/refresh`, request)
+    return this.http.put<AuthResponse>(`${environment.apiUrl}/api/auth/refresh`, request)
       .pipe(
         tap(this.setTokens),
         catchError((error) => {

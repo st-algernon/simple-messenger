@@ -1,25 +1,62 @@
 <div class="messenger-page">
     <mat-toolbar class="header">
         <span class="header__logo">Messenger</span>
-        <nav class="menu">
-            <ul class="menu__list">
-                <li class="menu__item">
+        <nav class="header__menu">
+            <ul class="header__menu-list">
+                <li class="header__menu-item">{{ me?.name }}</li>
+                <li class="header__menu-item">
                     <button mat-stroked-button (click)="logout()">Logout</button>
                 </li>
             </ul>
         </nav>
     </mat-toolbar>
     <main>
-        <mat-card class="aside">
-            <div class="aside__header">
-                <mat-card-title>Chats</mat-card-title>
-                <button mat-icon-button>
-                    <mat-icon matSuffix>forum</mat-icon>
-                </button>
-            </div>
-            <mat-card-content>
-                
-            </mat-card-content>
-        </mat-card>
+        <div class="aside">
+            <mat-card class="message-menu">
+                <mat-card-content>
+                    <button 
+                      class="message-menu__compose" 
+                      mat-raised-button color="primary" 
+                      (click)="openNewMessageDialog()"
+                    >Compose</button>
+                    <mat-divider></mat-divider>
+                    <mat-nav-list>
+                        <a 
+                          class="message-menu__item"
+                          mat-list-item 
+                          routerLink="/messages/incoming"
+                          routerLinkActive="message-menu__item--active"
+                        >
+                          <mat-icon class="message-menu__icon" mat-list-icon>inbox</mat-icon>
+                            Inbox
+                        </a>
+                        <a
+                          class="message-menu__item"
+                          mat-list-item 
+                          routerLink="/messages/sent"
+                          routerLinkActive="message-menu__item--active"
+                        >
+                            <mat-icon class="message-menu__icon" mat-list-icon>send</mat-icon>
+                            Sent
+                        </a>
+                      </mat-nav-list>
+                </mat-card-content>
+            </mat-card>
+            <mat-card class="contacts">
+                <mat-card-content>
+                    <mat-list>
+                        <mat-list-item *ngFor="let contact of contacts">
+                          <mat-icon class="contacts__avatar" matListAvatar>account_circle</mat-icon>
+                          <h4 mat-line>{{ contact.name }}</h4>
+                          <p mat-line>@{{ contact.username }}</p>
+                          <button mat-icon-button (click)="openNewMessageDialog(contact)">
+                            <mat-icon>launch</mat-icon>
+                          </button>
+                        </mat-list-item>
+                    </mat-list>
+                </mat-card-content>
+            </mat-card>
+        </div>
+        <router-outlet></router-outlet>
     </main>
 </div>

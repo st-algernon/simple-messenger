@@ -17,13 +17,13 @@ namespace zad5.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly ChatContext db;
-        //private readonly TokenValidationParameters tokenValidationParameters;
+        private readonly MessengerContext db;
+        private readonly TokenValidationParameters tokenValidationParameters;
 
-        public AuthController(ChatContext context)
+        public AuthController(MessengerContext context, TokenValidationParameters validationParams)
         {
             db = context;
-            //tokenValidationParameters = validationParams;
+            tokenValidationParameters = validationParams;
         }
 
         [HttpPost("login")]
@@ -78,31 +78,31 @@ namespace zad5.Controllers
             return Ok(await tokenHelper.GenerateJwtAsync(user));
         }
 
-        //[HttpPut("refresh")]
-        //public async Task<IActionResult> RefreshToken([FromBody] TokenRequest tokenRequest)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        var tokenHelper = new TokenHelper(db);
-        //        var res = await tokenHelper.VerifyToken(tokenRequest, tokenValidationParameters);
+        [HttpPut("refresh")]
+        public async Task<IActionResult> RefreshToken([FromBody] TokenRequest tokenRequest)
+        {
+            if (ModelState.IsValid)
+            {
+                var tokenHelper = new TokenHelper(db);
+                var res = await tokenHelper.VerifyToken(tokenRequest, tokenValidationParameters);
 
-        //        if (res == null)
-        //        {
-        //            return BadRequest(new AuthResponse()
-        //            {
-        //                Result = false,
-        //                Errors = new List<string>() { "Invalid tokens" }
-        //            });
-        //        }
+                if (res == null)
+                {
+                    return BadRequest(new AuthResponse()
+                    {
+                        Result = false,
+                        Errors = new List<string>() { "Invalid tokens" }
+                    });
+                }
 
-        //        return Ok(res);
-        //    }
+                return Ok(res);
+            }
 
-        //    return BadRequest(new AuthResponse()
-        //    {
-        //        Result = false,
-        //        Errors = new List<string>() { "Invalid payload" }
-        //    });
-        //}
+            return BadRequest(new AuthResponse()
+            {
+                Result = false,
+                Errors = new List<string>() { "Invalid payload" }
+            });
+        }
     }
 }

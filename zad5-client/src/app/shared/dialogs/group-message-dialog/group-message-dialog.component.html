@@ -1,1 +1,63 @@
-<p>group-message-dialog works!</p>
+<h2 mat-dialog-title>New message</h2>
+<mat-dialog-content>
+  <form [formGroup]="messageForm">
+    <p>
+      <mat-form-field class="recipients new-message__field" appearance="outline">
+          <mat-label>Recipients</mat-label>
+          <mat-chip-list #chipList aria-label="Recipients selection">
+              <mat-chip
+              *ngFor="let user of recipients"
+              (removed)="remove(user)">
+                {{ user.username }}
+              <button matChipRemove>
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+            <input
+              placeholder="New recipient..."
+              #userInput
+              formControlName="recipient"
+              [matAutocomplete]="auto"
+              [matChipInputFor]="chipList"
+              [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+              (matChipInputTokenEnd)="add($event)">
+          </mat-chip-list>
+          <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+            <mat-option *ngFor="let user of foundUsers$ | async" [value]="user">
+              {{ user.name }} <span class="recipients__autocomplete--username">@{{ user.username }}</span>
+            </mat-option>
+          </mat-autocomplete>
+      </mat-form-field>
+    </p>
+    <p>
+      <mat-form-field class="new-message__field" appearance="outline">
+        <mat-label>Subject</mat-label>
+        <input type="text" matInput maxlength="256" formControlName="subject">
+      </mat-form-field>
+    </p>
+    <!-- <p>
+      <mat-form-field class="new-message__field" appearance="outline">
+        <mat-label>Text</mat-label>
+        <textarea matInput formControlName="text"></textarea>
+      </mat-form-field>
+    </p> -->
+    <div class="NgxEditor__Wrapper">
+      <ngx-editor-menu [editor]="editor"> </ngx-editor-menu>
+      <ngx-editor
+        [editor]="editor"
+        formControlName="text"
+        placeholder="Text"
+      ></ngx-editor>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button 
+      mat-raised-button 
+      [mat-dialog-close]="true" 
+      color="primary" 
+      (click)="onSubmit()"
+      cdkFocusInitial>Send</button>
+</mat-dialog-actions>

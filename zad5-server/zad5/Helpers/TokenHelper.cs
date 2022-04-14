@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using zad5.Configs;
+using zad5.DTOs.Requests;
 using zad5.DTOs.Responses;
 using zad5.Models;
 
@@ -13,8 +15,8 @@ namespace zad5.Helpers
 {
     public class TokenHelper
     {
-        private readonly ChatContext db;
-        public TokenHelper(ChatContext context)
+        private readonly MessengerContext db;
+        public TokenHelper(MessengerContext context)
         {
             db = context;
         }
@@ -67,110 +69,110 @@ namespace zad5.Helpers
             return refreshToken;
         }
 
-        //public async Task<AuthResponse> VerifyToken(TokenRequest tokenRequest, TokenValidationParameters tokenValidationParameters)
-        //{
-        //    var jwtTokenHandler = new JwtSecurityTokenHandler();
+        public async Task<AuthResponse> VerifyToken(TokenRequest tokenRequest, TokenValidationParameters tokenValidationParameters)
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
 
-        //    try
-        //    {
-        //        var principal = jwtTokenHandler.ValidateToken(tokenRequest.Token, tokenValidationParameters, out var validatedToken);
+            try
+            {
+                var principal = jwtTokenHandler.ValidateToken(tokenRequest.Token, tokenValidationParameters, out var validatedToken);
 
-        //        if (validatedToken is JwtSecurityToken jwtSecurityToken)
-        //        {
-        //            var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
+                if (validatedToken is JwtSecurityToken jwtSecurityToken)
+                {
+                    var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
 
-        //            if (result == false)
-        //            {
-        //                return null;
-        //            }
-        //        }
+                    if (result == false)
+                    {
+                        return null;
+                    }
+                }
 
-        //        var utcExpiryDate = long.Parse(principal.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
-        //        var expDate = UnixTimeStampToDateTime(utcExpiryDate);
+                var utcExpiryDate = long.Parse(principal.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+                var expDate = UnixTimeStampToDateTime(utcExpiryDate);
 
-        //        if (expDate > DateTime.UtcNow)
-        //        {
-        //            return new AuthResponse()
-        //            {
-        //                Result = false,
-        //                Errors = new List<string>() { "We cannot refresh this since the token has not expired" }
-        //            };
-        //        }
+                if (expDate > DateTime.UtcNow)
+                {
+                    return new AuthResponse()
+                    {
+                        Result = false,
+                        Errors = new List<string>() { "We cannot refresh this since the token has not expired" }
+                    };
+                }
 
-        //        var storedRefreshToken = await db.RefreshTokens.FirstOrDefaultAsync(x => x.Token == tokenRequest.RefreshToken);
+                var storedRefreshToken = await db.RefreshTokens.FirstOrDefaultAsync(x => x.Token == tokenRequest.RefreshToken);
 
-        //        if (storedRefreshToken == null)
-        //        {
-        //            return new AuthResponse()
-        //            {
-        //                Result = false,
-        //                Errors = new List<string>() { "Refresh token doesnt exist" }
-        //            };
-        //        }
+                if (storedRefreshToken == null)
+                {
+                    return new AuthResponse()
+                    {
+                        Result = false,
+                        Errors = new List<string>() { "Refresh token doesnt exist" }
+                    };
+                }
 
-        //        if (DateTime.UtcNow > storedRefreshToken.ExpiryDate)
-        //        {
-        //            return new AuthResponse()
-        //            {
-        //                Result = false,
-        //                Errors = new List<string>() { "Refresh token has expired, user needs to relogin" }
-        //            };
-        //        }
+                if (DateTime.UtcNow > storedRefreshToken.ExpiryDate)
+                {
+                    return new AuthResponse()
+                    {
+                        Result = false,
+                        Errors = new List<string>() { "Refresh token has expired, user needs to relogin" }
+                    };
+                }
 
-        //        // check if the refresh token has been used
-        //        if (storedRefreshToken.IsUsed)
-        //        {
-        //            return new AuthResponse()
-        //            {
-        //                Result = false,
-        //                Errors = new List<string>() { "Token has been used" }
-        //            };
-        //        }
+                // check if the refresh token has been used
+                if (storedRefreshToken.IsUsed)
+                {
+                    return new AuthResponse()
+                    {
+                        Result = false,
+                        Errors = new List<string>() { "Token has been used" }
+                    };
+                }
 
-        //        // Check if the token is revoked
-        //        if (storedRefreshToken.IsRevoked)
-        //        {
-        //            return new AuthResponse()
-        //            {
-        //                Result = false,
-        //                Errors = new List<string>() { "Token has been revoked" }
-        //            };
-        //        }
+                // Check if the token is revoked
+                if (storedRefreshToken.IsRevoked)
+                {
+                    return new AuthResponse()
+                    {
+                        Result = false,
+                        Errors = new List<string>() { "Token has been revoked" }
+                    };
+                }
 
-        //        // we are getting here the jwt token id
-        //        var jti = principal.Claims.SingleOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+                // we are getting here the jwt token id
+                var jti = principal.Claims.SingleOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
 
-        //        // check the id that the recieved token has against the id saved in the db
-        //        if (storedRefreshToken.JwtId != jti)
-        //        {
-        //            return new AuthResponse()
-        //            {
-        //                Result = false,
-        //                Errors = new List<string>() { "The token doesn't matched the saved token" }
-        //            };
-        //        }
+                // check the id that the recieved token has against the id saved in the db
+                if (storedRefreshToken.JwtId != jti)
+                {
+                    return new AuthResponse()
+                    {
+                        Result = false,
+                        Errors = new List<string>() { "The token doesn't matched the saved token" }
+                    };
+                }
 
-        //        storedRefreshToken.IsUsed = true;
-        //        db.RefreshTokens.Update(storedRefreshToken);
-        //        await db.SaveChangesAsync();
+                storedRefreshToken.IsUsed = true;
+                db.RefreshTokens.Update(storedRefreshToken);
+                await db.SaveChangesAsync();
 
-        //        var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == storedRefreshToken.UserId);
+                var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Id == storedRefreshToken.UserId);
 
-        //        var tokenHelper = new TokenHelper(db);
-        //        return await tokenHelper.GenerateJwtAsync(dbUser);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var _ex = ex;
-        //        return null;
-        //    }
-        //}
+                var tokenHelper = new TokenHelper(db);
+                return await tokenHelper.GenerateJwtAsync(dbUser);
+            }
+            catch (Exception ex)
+            {
+                var _ex = ex;
+                return null;
+            }
+        }
 
-        //private DateTime UnixTimeStampToDateTime(double unixTimeStamp)
-        //{
-        //    DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-        //    dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToUniversalTime();
-        //    return dtDateTime;
-        //}
+        private DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        {
+            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToUniversalTime();
+            return dtDateTime;
+        }
     }
 }

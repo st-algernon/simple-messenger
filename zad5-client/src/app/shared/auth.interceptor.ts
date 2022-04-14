@@ -27,8 +27,7 @@ export class AuthInterceptor implements HttpInterceptor{
                 console.log('Interceptor Error: ', error)
 
                 if (error.status === 401) {
-                    this.auth.logout();
-                    this.router.navigate(['/auth'])
+                    this.auth.updateToken().subscribe();
                 }
                 
                 return throwError(error)

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace zad5.Models
+namespace zad5.DTOs
 {
-    public class User
+    public class UserDTO
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
